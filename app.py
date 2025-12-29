@@ -2,14 +2,59 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import base64
+import pandas as pd
 
-# Page config
-st.set_page_config(page_title="Brain Tumor Prediction", layout="centered")
+# --------------------------------------------------
+# Page configuration
+# --------------------------------------------------
+st.set_page_config(
+    page_title="Brain Tumor Prediction",
+    layout="centered"
+)
 
-st.title("🧠 Brain Tumor Prediction")
-st.write("Upload an MRI image to predict the tumor type.")
+# --------------------------------------------------
+# Background image function
+# --------------------------------------------------
+def set_bg(image_file):
+    with open(image_file, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode()
 
-# Load model
+    st.markdown(
+        f"""
+        <style>
+        html, body {{
+            height: 100%;
+            margin: 0;
+        }}
+
+        .stApp {{
+            background:
+                linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+                url("data:image/jpg;base64,{encoded}") center / cover no-repeat fixed;
+        }}
+
+        .block-container {{
+            max-width: 900px;
+            padding-top: 3rem;
+        }}
+
+        h1, h2, h3, p, label {{
+            color: white !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# --------------------------------------------------
+# Set background image
+# --------------------------------------------------
+set_bg("medical_bg.jpg")
+
+# --------------------------------------------------
+# Load trained model
+# --------------------------------------------------
 @st.cache_resource
 def load_model():
     return tf.keras.models.load_model(
@@ -19,28 +64,75 @@ def load_model():
 
 model = load_model()
 
-# Class labels (MUST match training folder names order)
+# --------------------------------------------------
+# Class labels (must match training order)
+# --------------------------------------------------
 class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
+# --------------------------------------------------
 # Image preprocessing
+# --------------------------------------------------
 def preprocess_image(image):
     image = image.resize((300, 300))
     image = np.array(image) / 255.0
     image = np.expand_dims(image, axis=0)
     return image
 
-# File upload
-uploaded_file = st.file_uploader("Upload MRI Image", type=["jpg", "jpeg", "png"])
+# --------------------------------------------------
+# UI - Title
+# --------------------------------------------------
+st.markdown(
+    "<h1 style='text-align:center;'>🧠 Brain Tumor Prediction</h1>",
+    unsafe_allow_html=True
+)
 
+st.markdown(
+    "<p style='text-align:center;'>Upload an MRI image to predict the tumor type</p>",
+    unsafe_allow_html=True
+)
+
+# --------------------------------------------------
+# File upload
+# --------------------------------------------------
+uploaded_file = st.file_uploader(
+    "Upload MRI Image",
+    type=["jpg", "jpeg", "png"]
+)
+
+# --------------------------------------------------
+# Prediction + Confidence Visualization
+# --------------------------------------------------
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, caption="Uploaded MRI Image", width=450)
 
-    if st.button("Predict"):
+    if st.button("🔍 Predict"):
         processed_image = preprocess_image(image)
         prediction = model.predict(processed_image)
-        predicted_class = class_names[np.argmax(prediction)]
-        confidence = np.max(prediction) * 100
 
+        probabilities = prediction[0]
+        predicted_class = class_names[np.argmax(probabilities)]
+        confidence = np.max(probabilities) * 100
+
+        # Prediction result
         st.success(f"Prediction: **{predicted_class.upper()}**")
         st.info(f"Confidence: **{confidence:.2f}%**")
+
+        # --------------------------------------------------
+        # Confidence Distribution Graph
+        # --------------------------------------------------
+        st.subheader("📊 Model Confidence Distribution")
+
+        df = pd.DataFrame({
+            "Tumor Type": class_names,
+            "Confidence (%)": probabilities * 100
+        })
+
+        st.bar_chart(df.set_index("Tumor Type"))
+
+        # --------------------------------------------------
+        # Confidence Progress Bar
+        # --------------------------------------------------
+        st.subheader("🎯 Prediction Confidence Level")
+        st.progress(int(confidence))
+        st.write(f"{confidence:.2f}% confidence for **{predicted_class.upper()}**")
