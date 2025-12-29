@@ -114,25 +114,33 @@ if uploaded_file is not None:
         predicted_class = class_names[np.argmax(probabilities)]
         confidence = np.max(probabilities) * 100
 
-        # Prediction result
+        # ---------------- Prediction Result ----------------
         st.success(f"Prediction: **{predicted_class.upper()}**")
         st.info(f"Confidence: **{confidence:.2f}%**")
 
-        # --------------------------------------------------
-        # Confidence Distribution Graph
-        # --------------------------------------------------
-        st.subheader("📊 Model Confidence Distribution")
+        # ---------------- Confidence Distribution (REALISTIC) ----------------
+        st.subheader("🧪 Model Confidence Distribution")
 
         df = pd.DataFrame({
             "Tumor Type": class_names,
             "Confidence (%)": probabilities * 100
         })
 
-        st.bar_chart(df.set_index("Tumor Type"))
+        # Sort for better visual clarity
+        df = df.sort_values("Confidence (%)", ascending=True)
 
-        # --------------------------------------------------
-        # Confidence Progress Bar
-        # --------------------------------------------------
+        st.bar_chart(
+            df.set_index("Tumor Type"),
+            horizontal=True
+        )
+
+        # ---------------- Predicted Class Confidence ----------------
         st.subheader("🎯 Prediction Confidence Level")
         st.progress(int(confidence))
-        st.write(f"{confidence:.2f}% confidence for **{predicted_class.upper()}**")
+        st.caption(f"{confidence:.2f}% confidence for **{predicted_class.upper()}**")
+
+        # ---------------- Medical Disclaimer ----------------
+        st.caption(
+            "⚠️ Confidence represents model probability, not medical certainty. "
+            "Predictions should be reviewed by qualified medical professionals."
+        )
