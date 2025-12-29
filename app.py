@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import base64
 import pandas as pd
+import plotly.express as px
 
 # --------------------------------------------------
 # Page configuration
@@ -100,7 +101,7 @@ uploaded_file = st.file_uploader(
 )
 
 # --------------------------------------------------
-# Prediction + Confidence Visualization
+# Prediction + Visualization
 # --------------------------------------------------
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
@@ -118,7 +119,7 @@ if uploaded_file is not None:
         st.success(f"Prediction: **{predicted_class.upper()}**")
         st.info(f"Confidence: **{confidence:.2f}%**")
 
-        # ---------------- Confidence Distribution (REALISTIC) ----------------
+        # ---------------- Professional Confidence Graph ----------------
         st.subheader("🧪 Model Confidence Distribution")
 
         df = pd.DataFrame({
@@ -126,20 +127,41 @@ if uploaded_file is not None:
             "Confidence (%)": probabilities * 100
         })
 
-        # Sort for better visual clarity
         df = df.sort_values("Confidence (%)", ascending=True)
 
-        st.bar_chart(
-            df.set_index("Tumor Type"),
-            horizontal=True
+        fig = px.bar(
+            df,
+            x="Confidence (%)",
+            y="Tumor Type",
+            orientation="h",
+            text="Confidence (%)",
+            color="Confidence (%)",
+            color_continuous_scale="Blues"
         )
 
-        # ---------------- Predicted Class Confidence ----------------
+        fig.update_traces(
+            texttemplate="%{text:.2f}%",
+            textposition="outside"
+        )
+
+        fig.update_layout(
+            xaxis_title="Confidence (%)",
+            yaxis_title="Tumor Type",
+            xaxis_range=[0, 100],
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="white"),
+            coloraxis_showscale=False
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # ---------------- Progress Bar ----------------
         st.subheader("🎯 Prediction Confidence Level")
         st.progress(int(confidence))
         st.caption(f"{confidence:.2f}% confidence for **{predicted_class.upper()}**")
 
-        # ---------------- Medical Disclaimer ----------------
+        # ---------------- Disclaimer ----------------
         st.caption(
             "⚠️ Confidence represents model probability, not medical certainty. "
             "Predictions should be reviewed by qualified medical professionals."
