@@ -119,7 +119,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("<b>Clinical Indication:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        "AI-assisted MRI brain evaluation.",
+        "AI-assisted MRI brain evaluation.This paitent report should be anayzed only by medical professionals",
         styles["Normal"]
     ))
 
@@ -170,7 +170,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
 # --------------------------------------------------
 # UI SECTION
 # --------------------------------------------------
-st.markdown("## 🧠 Brain Tumor AI Prediction & Report System")
+st.markdown("## 🧠 Brain Tumor Prediction & Report System")
 
 st.subheader("🧾 Patient Information")
 
@@ -259,4 +259,5 @@ st.write("""
 - Classes: Glioma, Meningioma, Pituitary, No Tumor  
 - Validation Accuracy: ~96%  
 - Dataset: Public Brain MRI Dataset  
+- Warning: This report must be analyzed only by medical professionls before any decisoion made!!.
 """)
