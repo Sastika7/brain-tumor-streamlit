@@ -23,7 +23,7 @@ st.set_page_config(page_title="Brain Tumor AI Report System", layout="centered")
 # PROFESSIONAL BACKGROUND (URL BASED - CLOUD SAFE)
 # --------------------------------------------------
 def set_bg():
-    bg_url = "https://images.unsplash.com/photo-1588776814546-ec7e7d0e9e3f"
+    bg_url = "medical_bg.jpg"
     st.markdown(
         f"""
         <style>
