@@ -5,6 +5,7 @@ from PIL import Image
 import pandas as pd
 import plotly.express as px
 import io
+import base64
 from datetime import datetime
 
 # PDF
@@ -20,21 +21,24 @@ from reportlab.lib.pagesizes import A4
 st.set_page_config(page_title="Brain Tumor AI Report System", layout="centered")
 
 # --------------------------------------------------
-# PROFESSIONAL BACKGROUND (URL BASED - CLOUD SAFE)
+# BACKGROUND IMAGE (LOCAL - CLOUD SAFE)
 # --------------------------------------------------
 def set_bg():
-    bg_url = "medical_bg.jpg"
+    with open("medical_bg.jpg", "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode()
+
     st.markdown(
         f"""
         <style>
         .stApp {{
             background:
-                linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-                url("{bg_url}");
+                linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+                url("data:image/jpg;base64,{encoded}");
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }}
+
         h1, h2, h3, h4, p, label {{
             color: white !important;
         }}
@@ -46,12 +50,12 @@ def set_bg():
 set_bg()
 
 # --------------------------------------------------
-# LEGAL DISCLAIMER GATE
+# LEGAL DISCLAIMER
 # --------------------------------------------------
 st.title("⚠️ AI Medical Prototype")
 
 agree = st.checkbox(
-    "I understand this tool is NOT a certified medical device and is for educational/demo purposes only."
+    "I understand this system is NOT a certified medical device and is for educational/demo purposes only."
 )
 
 if not agree:
@@ -71,7 +75,7 @@ model = load_model()
 class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
 # --------------------------------------------------
-# PREPROCESS IMAGE
+# IMAGE PREPROCESS
 # --------------------------------------------------
 def preprocess_image(image):
     image = image.resize((300, 300))
@@ -80,7 +84,7 @@ def preprocess_image(image):
     return image
 
 # --------------------------------------------------
-# PDF GENERATION
+# PDF GENERATOR
 # --------------------------------------------------
 def generate_pdf(patient_name, age, gender, patient_id,
                  prediction, confidence, image):
@@ -93,6 +97,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("MRI BRAIN RADIOLOGY REPORT", styles["Title"]))
     elements.append(Spacer(1, 20))
 
+    # Patient Table
     data = [
         ["Patient Name:", patient_name],
         ["Patient ID:", patient_id],
@@ -110,6 +115,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(table)
     elements.append(Spacer(1, 25))
 
+    # Findings
     elements.append(Paragraph("<b>Clinical Indication:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
@@ -122,7 +128,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("<b>Findings:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        f"AI model predicts presence of <b>{prediction.upper()}</b>.",
+        f"AI model predicts <b>{prediction.upper()}</b>.",
         styles["Normal"]
     ))
     elements.append(Paragraph(
@@ -136,12 +142,13 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
         f"Findings suggest {prediction.upper()}. "
-        "Radiologist verification is required.",
+        "Radiologist verification required.",
         styles["Normal"]
     ))
 
     elements.append(Spacer(1, 25))
 
+    # Add MRI Image
     img_buffer = io.BytesIO()
     image.save(img_buffer, format="PNG")
     img_buffer.seek(0)
@@ -151,8 +158,8 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Spacer(1, 30))
 
     elements.append(Paragraph(
-        "<b>LEGAL DISCLAIMER:</b> This AI system is an experimental prototype "
-        "and is NOT approved for clinical use. Do not use for diagnosis.",
+        "<b>LEGAL DISCLAIMER:</b> This AI system is experimental and NOT approved "
+        "for clinical use. Do not use for diagnosis.",
         styles["Normal"]
     ))
 
@@ -161,7 +168,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     return buffer
 
 # --------------------------------------------------
-# UI
+# UI SECTION
 # --------------------------------------------------
 st.markdown("## 🧠 Brain Tumor AI Prediction & Report System")
 
@@ -235,7 +242,7 @@ if uploaded_file is not None:
         )
 
         st.download_button(
-            label="📥 Download Official MRI Report (PDF)",
+            label="📥 Download MRI Report (PDF)",
             data=pdf_file,
             file_name=f"{patient_name}_MRI_Report.pdf",
             mime="application/pdf"
