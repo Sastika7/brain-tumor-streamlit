@@ -52,7 +52,7 @@ set_bg()
 # --------------------------------------------------
 # LEGAL DISCLAIMER
 # --------------------------------------------------
-st.title("⚠️ AI Medical Prototype")
+st.title("⚠️ Medical Prototype")
 
 agree = st.checkbox(
     "I understand this system is NOT a certified medical device and is for educational/demo purposes only."
@@ -142,7 +142,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
         f"Findings suggest {prediction.upper()}. "
-        "Radiologist verification required.",
+        "Radiologist verification is required before declaring the type of tumor.",
         styles["Normal"]
     ))
 
@@ -159,7 +159,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
 
     elements.append(Paragraph(
         "<b>LEGAL DISCLAIMER:</b> This AI system is experimental and NOT approved "
-        "for clinical use. Do not use for diagnosis.",
+        "for clinical use. Do not use for entire diagnosis.",
         styles["Normal"]
     ))
 
@@ -194,7 +194,7 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Uploaded MRI Image", width=400)
 
-    if st.button("🔍 Generate AI Report"):
+    if st.button("🔍 Generate Report"):
 
         if not patient_name:
             st.warning("Please enter patient name.")
