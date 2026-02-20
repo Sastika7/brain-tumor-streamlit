@@ -4,7 +4,6 @@ import numpy as np
 from PIL import Image
 import pandas as pd
 import plotly.express as px
-import base64
 import io
 from datetime import datetime
 
@@ -21,9 +20,35 @@ from reportlab.lib.pagesizes import A4
 st.set_page_config(page_title="Brain Tumor AI Report System", layout="centered")
 
 # --------------------------------------------------
-# LEGAL DISCLAIMER WALL
+# PROFESSIONAL BACKGROUND (URL BASED - CLOUD SAFE)
 # --------------------------------------------------
-st.title("⚠️ AI Medical Prototype Disclaimer")
+def set_bg():
+    bg_url = "https://images.unsplash.com/photo-1588776814546-ec7e7d0e9e3f"
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background:
+                linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                url("{bg_url}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+        h1, h2, h3, h4, p, label {{
+            color: white !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+set_bg()
+
+# --------------------------------------------------
+# LEGAL DISCLAIMER GATE
+# --------------------------------------------------
+st.title("⚠️ AI Medical Prototype")
 
 agree = st.checkbox(
     "I understand this tool is NOT a certified medical device and is for educational/demo purposes only."
@@ -43,21 +68,10 @@ def load_model():
     )
 
 model = load_model()
-
 class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
 # --------------------------------------------------
-# RATE LIMITING (Basic)
-# --------------------------------------------------
-if "prediction_count" not in st.session_state:
-    st.session_state.prediction_count = 0
-
-if st.session_state.prediction_count >= 5:
-    st.error("Prediction limit reached. Please refresh the page.")
-    st.stop()
-
-# --------------------------------------------------
-# IMAGE PREPROCESS
+# PREPROCESS IMAGE
 # --------------------------------------------------
 def preprocess_image(image):
     image = image.resize((300, 300))
@@ -74,13 +88,11 @@ def generate_pdf(patient_name, age, gender, patient_id,
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     elements = []
-
     styles = getSampleStyleSheet()
 
     elements.append(Paragraph("MRI BRAIN RADIOLOGY REPORT", styles["Title"]))
     elements.append(Spacer(1, 20))
 
-    # Patient Info Table
     data = [
         ["Patient Name:", patient_name],
         ["Patient ID:", patient_id],
@@ -98,11 +110,10 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(table)
     elements.append(Spacer(1, 25))
 
-    # Findings
     elements.append(Paragraph("<b>Clinical Indication:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        "Patient referred for AI-assisted MRI brain evaluation.",
+        "AI-assisted MRI brain evaluation.",
         styles["Normal"]
     ))
 
@@ -124,27 +135,24 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("<b>Impression:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        f"Findings are suggestive of {prediction.upper()}. "
-        "Clinical correlation with certified radiologist is mandatory.",
+        f"Findings suggest {prediction.upper()}. "
+        "Radiologist verification is required.",
         styles["Normal"]
     ))
 
     elements.append(Spacer(1, 25))
 
-    # MRI Image
     img_buffer = io.BytesIO()
     image.save(img_buffer, format="PNG")
     img_buffer.seek(0)
-
     pdf_image = RLImage(img_buffer, width=4*inch, height=4*inch)
     elements.append(pdf_image)
 
     elements.append(Spacer(1, 30))
 
     elements.append(Paragraph(
-        "<b>LEGAL DISCLAIMER:</b> This AI system is an experimental prototype. "
-        "It is NOT FDA/CE approved and must NOT be used for clinical decision making. "
-        "Always consult a certified radiologist.",
+        "<b>LEGAL DISCLAIMER:</b> This AI system is an experimental prototype "
+        "and is NOT approved for clinical use. Do not use for diagnosis.",
         styles["Normal"]
     ))
 
@@ -157,7 +165,6 @@ def generate_pdf(patient_name, age, gender, patient_id,
 # --------------------------------------------------
 st.markdown("## 🧠 Brain Tumor AI Prediction & Report System")
 
-# Patient Form
 st.subheader("🧾 Patient Information")
 
 col1, col2 = st.columns(2)
@@ -170,11 +177,7 @@ with col2:
     gender = st.selectbox("Gender", ["Male", "Female", "Other"])
     patient_id = st.text_input("Patient ID", value=f"PID-{np.random.randint(1000,9999)}")
 
-# Upload
-uploaded_file = st.file_uploader(
-    "Upload MRI Image",
-    type=["jpg", "jpeg", "png"]
-)
+uploaded_file = st.file_uploader("Upload MRI Image", type=["jpg", "jpeg", "png"])
 
 # --------------------------------------------------
 # PREDICTION
@@ -184,14 +187,11 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Uploaded MRI Image", width=400)
 
-    if st.button("🔍 Generate Report"):
+    if st.button("🔍 Generate AI Report"):
 
-        # Validation
         if not patient_name:
             st.warning("Please enter patient name.")
             st.stop()
-
-        st.session_state.prediction_count += 1
 
         processed = preprocess_image(image)
         prediction = model.predict(processed)
@@ -200,11 +200,9 @@ if uploaded_file is not None:
         predicted_class = class_names[np.argmax(probabilities)]
         confidence = np.max(probabilities) * 100
 
-        # Result
         st.success(f"Prediction: {predicted_class.upper()}")
         st.info(f"Confidence: {confidence:.2f}%")
 
-        # Graph
         df = pd.DataFrame({
             "Tumor Type": class_names,
             "Confidence (%)": probabilities * 100
@@ -224,11 +222,8 @@ if uploaded_file is not None:
         fig.update_layout(coloraxis_showscale=False)
 
         st.plotly_chart(fig, use_container_width=True)
-
-        # Progress
         st.progress(int(confidence))
 
-        # Generate PDF
         pdf_file = generate_pdf(
             patient_name,
             age,
@@ -247,14 +242,14 @@ if uploaded_file is not None:
         )
 
 # --------------------------------------------------
-# MODEL METRICS SECTION
+# MODEL INFO
 # --------------------------------------------------
 st.markdown("---")
 st.subheader("📊 Model Performance")
 
 st.write("""
-- Architecture: EfficientNetB3
-- Classes: Glioma, Meningioma, Pituitary, No Tumor
-- Validation Accuracy: ~96%
-- Dataset: Public Brain MRI Dataset
+- Architecture: EfficientNetB3  
+- Classes: Glioma, Meningioma, Pituitary, No Tumor  
+- Validation Accuracy: ~96%  
+- Dataset: Public Brain MRI Dataset  
 """)
