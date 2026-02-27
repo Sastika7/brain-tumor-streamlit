@@ -18,7 +18,7 @@ from reportlab.lib.pagesizes import A4
 # --------------------------------------------------
 # PAGE CONFIG
 # --------------------------------------------------
-st.set_page_config(page_title="Brain Tumor AI Report System", layout="centered")
+st.set_page_config(page_title="Brain Tumor Report System", layout="centered")
 
 # --------------------------------------------------
 # BACKGROUND IMAGE (LOCAL - CLOUD SAFE)
@@ -119,7 +119,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("<b>Clinical Indication:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        "AI-assisted MRI brain evaluation.This paitent report should be anayzed only by medical professionals",
+        "MRI brain evaluation.This paitent report should be anayzed only by medical professionals",
         styles["Normal"]
     ))
 
@@ -128,7 +128,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("<b>Findings:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        f"AI model predicts <b>{prediction.upper()}</b>.",
+        f"EfficientNet-B3 model predicts <b>{prediction.upper()}</b>.",
         styles["Normal"]
     ))
     elements.append(Paragraph(
@@ -158,7 +158,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Spacer(1, 30))
 
     elements.append(Paragraph(
-        "<b>LEGAL DISCLAIMER:</b> This AI system is experimental and NOT approved "
+        "<b>LEGAL DISCLAIMER:</b> This system is experimental and NOT approved "
         "for clinical use. Do not use for entire diagnosis.",
         styles["Normal"]
     ))
