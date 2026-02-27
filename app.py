@@ -15,13 +15,15 @@ from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import A4
 
+
 # --------------------------------------------------
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(page_title="Brain Tumor Report System", layout="centered")
 
+
 # --------------------------------------------------
-# BACKGROUND IMAGE (LOCAL - CLOUD SAFE)
+# BACKGROUND IMAGE
 # --------------------------------------------------
 def set_bg():
     with open("medical_bg.jpg", "rb") as img_file:
@@ -38,7 +40,6 @@ def set_bg():
             background-position: center;
             background-attachment: fixed;
         }}
-
         h1, h2, h3, h4, p, label {{
             color: white !important;
         }}
@@ -49,8 +50,9 @@ def set_bg():
 
 set_bg()
 
+
 # --------------------------------------------------
-# LEGAL DISCLAIMER
+# DISCLAIMER
 # --------------------------------------------------
 st.title("⚠️ Medical Prototype")
 
@@ -60,6 +62,7 @@ agree = st.checkbox(
 
 if not agree:
     st.stop()
+
 
 # --------------------------------------------------
 # LOAD MODEL
@@ -72,7 +75,27 @@ def load_model():
     )
 
 model = load_model()
+
 class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
+
+
+# --------------------------------------------------
+# TUMOR DEFINITIONS
+# --------------------------------------------------
+tumor_definitions = {
+    "glioma": "Glioma is a tumor that develops from glial cells in the brain or spinal cord. "
+              "It may be low-grade or high-grade depending on its aggressiveness.",
+
+    "meningioma": "Meningioma arises from the meninges, the protective layers covering the brain. "
+                  "It is usually slow-growing and often benign.",
+
+    "pituitary": "Pituitary tumor forms in the pituitary gland at the base of the brain. "
+                 "It may affect hormone production and cause endocrine imbalance.",
+
+    "notumor": "No tumor detected. The MRI scan does not show signs of abnormal tumor growth "
+               "based on the model prediction."
+}
+
 
 # --------------------------------------------------
 # IMAGE PREPROCESS
@@ -82,6 +105,7 @@ def preprocess_image(image):
     image = np.array(image) / 255.0
     image = np.expand_dims(image, axis=0)
     return image
+
 
 # --------------------------------------------------
 # PDF GENERATOR
@@ -97,7 +121,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Paragraph("MRI BRAIN RADIOLOGY REPORT", styles["Title"]))
     elements.append(Spacer(1, 20))
 
-    # Patient Table
+    # Patient Details
     data = [
         ["Patient Name:", patient_name],
         ["Patient ID:", patient_id],
@@ -108,27 +132,17 @@ def generate_pdf(patient_name, age, gender, patient_id,
 
     table = Table(data, colWidths=[150, 300])
     table.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
     ]))
 
     elements.append(table)
     elements.append(Spacer(1, 25))
 
     # Findings
-    elements.append(Paragraph("<b>Clinical Indication:</b>", styles["Heading2"]))
-    elements.append(Spacer(1, 10))
-    elements.append(Paragraph(
-        "MRI brain evaluation.This paitent report should be anayzed only by medical professionals",
-        styles["Normal"]
-    ))
-
-    elements.append(Spacer(1, 15))
-
     elements.append(Paragraph("<b>Findings:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        f"EfficientNet-B3 model predicts <b>{prediction.upper()}</b>.",
+        f"The AI model predicts <b>{prediction.upper()}</b>.",
         styles["Normal"]
     ))
     elements.append(Paragraph(
@@ -136,13 +150,16 @@ def generate_pdf(patient_name, age, gender, patient_id,
         styles["Normal"]
     ))
 
-    elements.append(Spacer(1, 20))
-
-    elements.append(Paragraph("<b>Impression:</b>", styles["Heading2"]))
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        f"Findings suggest {prediction.upper()}. "
-        "Radiologist verification is required before declaring the type of tumor.",
+        tumor_definitions[prediction],
+        styles["Normal"]
+    ))
+
+    elements.append(Spacer(1, 20))
+
+    elements.append(Paragraph(
+        "<b>Impression:</b> Radiologist verification is required before making any medical decision.",
         styles["Normal"]
     ))
 
@@ -158,8 +175,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements.append(Spacer(1, 30))
 
     elements.append(Paragraph(
-        "<b>LEGAL DISCLAIMER:</b> This system is experimental and NOT approved "
-        "for clinical use. Do not use for entire diagnosis.",
+        "<b>LEGAL DISCLAIMER:</b> This AI system is experimental and NOT approved for clinical use.",
         styles["Normal"]
     ))
 
@@ -167,8 +183,9 @@ def generate_pdf(patient_name, age, gender, patient_id,
     buffer.seek(0)
     return buffer
 
+
 # --------------------------------------------------
-# UI SECTION
+# UI
 # --------------------------------------------------
 st.markdown("## 🧠 Brain Tumor Prediction & Report System")
 
@@ -185,6 +202,7 @@ with col2:
     patient_id = st.text_input("Patient ID", value=f"PID-{np.random.randint(1000,9999)}")
 
 uploaded_file = st.file_uploader("Upload MRI Image", type=["jpg", "jpeg", "png"])
+
 
 # --------------------------------------------------
 # PREDICTION
@@ -210,6 +228,9 @@ if uploaded_file is not None:
         st.success(f"Prediction: {predicted_class.upper()}")
         st.info(f"Confidence: {confidence:.2f}%")
 
+        st.subheader("🧠 Tumor Information")
+        st.write(tumor_definitions[predicted_class])
+
         df = pd.DataFrame({
             "Tumor Type": class_names,
             "Confidence (%)": probabilities * 100
@@ -220,15 +241,12 @@ if uploaded_file is not None:
             x="Confidence (%)",
             y="Tumor Type",
             orientation="h",
-            text="Confidence (%)",
-            color="Confidence (%)",
-            color_continuous_scale="Blues"
+            text="Confidence (%)"
         )
 
         fig.update_traces(texttemplate="%{text:.2f}%", textposition="outside")
-        fig.update_layout(coloraxis_showscale=False)
-
         st.plotly_chart(fig, use_container_width=True)
+
         st.progress(int(confidence))
 
         pdf_file = generate_pdf(
@@ -248,6 +266,7 @@ if uploaded_file is not None:
             mime="application/pdf"
         )
 
+
 # --------------------------------------------------
 # MODEL INFO
 # --------------------------------------------------
@@ -259,5 +278,5 @@ st.write("""
 - Classes: Glioma, Meningioma, Pituitary, No Tumor  
 - Validation Accuracy: ~96%  
 - Dataset: Public Brain MRI Dataset  
-- Warning: This report must be analyzed only by medical professionls before any decisoion made!!.
+- This system performs image classification only.
 """)
