@@ -81,7 +81,7 @@ class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
 # --------------------------------------------------
 # MEDICAL INFORMATION
 # --------------------------------------------------
-tumor_info = {"Tumor details\n
+tumor_info = {
     "glioma": {
         "definition": "Glioma is a tumor arising from glial cells in the brain or spinal cord. It may be low-grade or high-grade depending on aggressiveness.",
         "symptoms": "Headache, seizures, nausea, vomiting, memory problems, personality changes, weakness in limbs.",
