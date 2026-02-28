@@ -126,7 +126,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
     elements = []
     styles = getSampleStyleSheet()
 
-    elements.append(Paragraph("MRI BRAIN AI REPORT", styles["Title"]))
+    elements.append(Paragraph("MRI BRAIN REPORT", styles["Title"]))
     elements.append(Spacer(1, 20))
 
     data = [
@@ -163,7 +163,7 @@ def generate_pdf(patient_name, age, gender, patient_id,
 
     elements.append(Spacer(1, 20))
     elements.append(Paragraph(
-        "<b>DISCLAIMER:</b> This AI system is experimental and not approved for clinical diagnosis.",
+        "<b>DISCLAIMER:</b> This system is experimental and not approved for clinical diagnosis.",
         styles["Normal"]
     ))
 
